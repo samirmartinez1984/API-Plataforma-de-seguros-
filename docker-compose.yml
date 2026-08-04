@@ -1,0 +1,32 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: insurance-mysql
+    environment:
+      MYSQL_DATABASE: plataforma_seguros
+      MYSQL_ROOT_PASSWORD: admin
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-padmin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: insurance-api
+    ports:
+      - "8080:8080"
+    environment:
+      DB_USERNAME: root
+      DB_PASSWORD: admin
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/plataforma_seguros?useSSL=false&serverTimezone=America/Bogota&allowPublicKeyRetrieval=true
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql-data:
