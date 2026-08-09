@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll() // Rutas de autenticación abiertas al público
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll() // Documentación OpenAPI abierta
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll() // Endpoints públicos de monitoreo
                         .anyRequest().authenticated() // Cualquier otra ruta requiere token válido
                 )
                 .sessionManagement(session -> session
