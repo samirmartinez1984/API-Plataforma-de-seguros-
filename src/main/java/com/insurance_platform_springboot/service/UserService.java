@@ -30,6 +30,14 @@ import java.util.List;
  * Servicio principal para la gestión de usuarios en el sistema.
  * Provee funcionalidades para el registro, autenticación (login),
  * y operaciones CRUD básicas sobre los usuarios.
+ *
+ * <p>Dependencias:</p>
+ * <ul>
+ *     <li>Repositorios: {@link UserRepository}, {@link RoleRepository}</li>
+ *     <li>Seguridad: {@link PasswordEncoder}, {@link AuthenticationManager}, {@link JwtTokenProvider}, {@link UserDetailsServiceImpl}</li>
+ *     <li>Mappers: {@link UserMapper}</li>
+ *     <li>Notificaciones: {@link NotificationService}</li>
+ * </ul>
  */
 @Service
 @RequiredArgsConstructor
@@ -42,12 +50,14 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
 
     /**
      * Registra un nuevo usuario en el sistema.
-     * Realiza validaciones de unicidad para username y email.
-     * Asigna el rol por defecto (ROLE_USER) y cifra la contraseña.
-     * Tras el registro exitoso, genera un token JWT para auto-login.
+     *
+     * <p>Realiza validaciones de unicidad para username y email, asigna el rol de cliente,
+     * cifra la contraseña y, tras un registro exitoso, genera un token JWT para auto-login
+     * y envía un correo de bienvenida de forma asíncrona.</p>
      *
      * @param dto Objeto RegisterRequestDTO con los datos del nuevo usuario.
      * @return AuthResponseDTO que contiene el token JWT y datos básicos del usuario.
@@ -80,6 +90,9 @@ public class UserService {
 
         // Guardar en la base de datos
         User saved = userRepository.save(user);
+
+        // Enviar correo de bienvenida (operación asíncrona que no bloquea la respuesta)
+        notificationService.sendWelcomeEmail(saved.getEmail(), saved.getName());
 
         // Generar token JWT inmediatamente (Auto-login)
         UserDetails userDetails = userDetailsService.loadUserByUsername(saved.getEmail());
