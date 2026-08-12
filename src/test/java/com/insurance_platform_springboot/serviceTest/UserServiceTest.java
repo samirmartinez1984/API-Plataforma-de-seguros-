@@ -12,6 +12,7 @@ import com.insurance_platform_springboot.repository.RoleRepository;
 import com.insurance_platform_springboot.repository.UserRepository;
 import com.insurance_platform_springboot.security.JwtTokenProvider;
 import com.insurance_platform_springboot.security.UserDetailsServiceImpl;
+import com.insurance_platform_springboot.service.NotificationService;
 import com.insurance_platform_springboot.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -67,6 +68,10 @@ public class UserServiceTest {
     /** Simulación del gestor de autenticación de Spring Security para el login. */
     @Mock
     private AuthenticationManager authenticationManager;
+
+    /** Simulacion del gestor de dependencia de spring mail.*/
+    @Mock
+    private NotificationService notificationService;
 
     /** Instancia real del servicio UserService con todos los mocks inyectados. */
     @InjectMocks
