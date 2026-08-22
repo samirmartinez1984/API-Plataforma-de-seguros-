@@ -1,141 +1,247 @@
-# API Plataforma de Seguros
+# Plataforma de Seguros - API REST
 
-API REST para la gestión integral del ciclo de vida de seguros: catálogo de productos, pólizas, reclamos (siniestros) y socios (partners), con autenticación basada en JWT y control de acceso por roles.
+[![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.14-6DB33F?style=flat-square&logo=spring-boot)](https://spring.io/projects/spring-boot)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql)](https://www.mysql.com/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
-## Estado del proyecto
+Una aplicación empresarial de **gestión integral de seguros** construida con Spring Boot 3.5, implementando patrones arquitectónicos modernos, seguridad robusta basada en JWT, y prácticas DevOps de clase mundial.
 
-- ✅ **Fase 1 — Completada**: API funcional, autenticación JWT, CRUD completo, tests unitarios e integración, migraciones con Flyway.
-- 🚧 **Fase 2 — En desarrollo**: Docker, CI/CD, notificaciones, gestión de documentos, caché, auditoría, dashboard y más.
+## 📋 Tabla de Contenidos
 
-## Arquitectura
+- [Características](#características)
+- [Arquitectura](#arquitectura)
+- [Stack Tecnológico](#stack-tecnológico)
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación y Configuración](#instalación-y-configuración)
+- [Variables de Entorno](#variables-de-entorno)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [API Endpoints](#api-endpoints)
+- [Seguridad](#seguridad)
+- [Monitoreo y Observabilidad](#monitoreo-y-observabilidad)
+- [Testing](#testing)
+- [Despliegue](#despliegue)
+- [Roadmap](#roadmap)
 
-El proyecto sigue el patrón de tres capas, estándar en aplicaciones Spring Boot:
+---
+
+## ✨ Características
+
+### Funcionalidades Principales
+
+- **Autenticación y Autorización**: Sistema de roles basado en JWT con tres perfiles (`ADMIN`, `USER`, `SUPERVISOR`)
+- **Gestión de Pólizas**: Crear, actualizar y consultar pólizas de seguros con ciclo de vida completo
+- **Sistema de Reclamos**: Registro, seguimiento y gestión de siniestros con estados predefinidos
+- **Catálogo de Productos**: Administración centralizada de productos y planes de seguros
+- **Gestión de Socios**: Control de partners asegurados (talleres, clínicas, etc.)
+- **Notificaciones por Correo**: Sistema asíncrono de emails automáticos en eventos clave (registro, reclamos)
+- **Gestión de Documentos**: Subida y almacenamiento de archivos adjuntos en reclamos con UUID únicos
+- **Monitoreo en Tiempo Real**: Health checks y métricas vía Spring Boot Actuator
+- **Documentación Interactiva**: API Explorer integrado con Swagger/OpenAPI
+
+### Características Técnicas
+
+- ✅ Arquitectura de 3 capas (Controller → Service → Repository)
+- ✅ Validación de datos robusta en todas las capas
+- ✅ Manejo centralizado de excepciones
+- ✅ Migrations versionadas con Flyway (V1-V4)
+- ✅ Logging estructurado
+- ✅ Pipeline CI/CD automático (GitHub Actions)
+- ✅ Containerización con Docker y docker-compose
+- ✅ +48 pruebas unitarias e integración
+- ✅ Operaciones asíncronas con @Async
+
+---
+
+## 🏗️ Arquitectura
 
 ```
-Controller  →  Service  →  Repository  →  Base de datos (MySQL)
+┌─────────────────────────────────────────────────────────┐
+│                    Cliente (REST/HTTP)                  │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│           Capa de Controladores (REST API)              │
+│  AuthController │ UserController │ ClaimController ...  │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│             Capa de Servicios (Lógica de Negocio)       │
+│  UserService │ ClaimService │ NotificationService ...   │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│            Capa de Repositorios (Acceso a Datos)        │
+│  UserRepository │ ClaimRepository │ DocumentRepository  │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│                   Base de Datos (MySQL)                 │
+│              Persistencia y Transacciones                │
+└─────────────────────────────────────────────────────────┘
 ```
 
-- **Controller**: expone los endpoints REST y valida las peticiones de entrada.
-- **Service**: contiene la lógica de negocio.
-- **Repository**: acceso a datos vía Spring Data JPA.
-- **DTOs + MapStruct**: se usan DTOs (request/response/update) para no exponer las entidades JPA directamente, con mapeo automático vía MapStruct.
+---
 
-## Roles y funcionalidades
+## 🛠️ Stack Tecnológico
 
-| Rol | Permisos |
-|---|---|
-| **ADMIN** | Gestión total: usuarios, roles, catálogo de productos, pólizas, reclamos y socios. |
-| **USER** (cliente) | Consulta el catálogo, adquiere pólizas, registra reclamos sobre sus pólizas activas, consulta sus propias pólizas/reclamos. |
-| **SUPERVISOR** | Gestiona los reclamos reportados por clientes: actualiza estados y asigna socios (talleres, clínicas, etc.). |
+| Categoría | Tecnología | Versión |
+|-----------|-----------|---------|
+| **Lenguaje** | Java | 21 |
+| **Framework** | Spring Boot | 3.5.14 |
+| **ORM** | Hibernate/JPA | Via Spring Data |
+| **Base de Datos** | MySQL | 8.0 |
+| **Seguridad** | Spring Security + JWT | HS512 |
+| **Migraciones** | Flyway | Auto-versionado |
+| **Notificaciones** | Spring Mail | SMTP async |
+| **Documentación** | SpringDoc OpenAPI | Swagger 3.0 |
+| **Mapeo** | MapStruct | Code generation |
+| **Testing** | JUnit 5 + Mockito | Integración completa |
+| **DevOps** | Docker + GitHub Actions | CI/CD |
+| **Build** | Maven | 3.8+ |
 
-**Flujo principal:**
-1. Un **ADMIN** define los productos de seguro en el catálogo.
-2. Un **cliente** se registra y adquiere una póliza basada en un producto.
-3. Ante un incidente, el cliente crea un **reclamo** asociado a su póliza.
-4. Un **SUPERVISOR** revisa el reclamo y lo asigna a un **partner** para su resolución.
+---
 
-## Stack tecnológico
+## 📋 Requisitos Previos
 
-- **Framework**: Spring Boot
-- **Lenguaje**: Java 21
-- **Base de datos**: MySQL (H2 en memoria para tests)
-- **Persistencia**: Spring Data JPA + Hibernate
-- **Migraciones**: Flyway
-- **Seguridad**: Spring Security + JWT
-- **Documentación API**: SpringDoc (OpenAPI/Swagger)
-- **Mapeo de objetos**: MapStruct
-- **Build**: Maven
-- **Utilidades**: Lombok
-- **Tests**: JUnit 5, Mockito, AssertJ
+### Desarrollo Local
+- Java 21+
+- MySQL 8.0+
+- Maven 3.8+
+- Git
+- Docker & Docker Compose (opcional)
 
-## Requisitos previos
+### Herramientas Recomendadas
+- IntelliJ IDEA o VS Code
+- Postman/Insomnia
+- MySQL Workbench
 
-- Java 21
-- Maven (o usar el wrapper incluido `./mvnw`)
-- MySQL corriendo localmente (o accesible por red)
+---
 
-## Cómo ejecutar el proyecto localmente
+## 🚀 Instalación y Configuración
 
-### 1. Clonar el repositorio
+### 1. Clonar Repositorio
 
 ```bash
 git clone https://github.com/samirmartinez1984/API-Plataforma-de-seguros-.git
 cd API-Plataforma-de-seguros-
 ```
 
-### 2. Configurar variables de entorno (opcional)
-
-El proyecto trae valores por defecto para desarrollo local, pero puedes sobreescribirlos con variables de entorno:
-
-| Variable | Descripción | Valor por defecto |
-|---|---|---|
-| `DB_USERNAME` | Usuario de MySQL | `root` |
-| `DB_PASSWORD` | Contraseña de MySQL | `admin` |
-| `JWT_SECRET` | Clave para firmar tokens JWT | valor de desarrollo incluido |
-
-> ⚠️ En un entorno de producción, `JWT_SECRET` **siempre** debe definirse como variable de entorno propia, nunca usar el valor por defecto del repositorio.
-
-### 3. Crear la base de datos
-
-Crea una base de datos MySQL llamada `plataforma_seguros`. Las tablas se generan automáticamente al arrancar la app gracias a Flyway (ver `src/main/resources/db/migration/`).
-
-### 4. Ejecutar la aplicación
+### 2. Configurar Variables de Entorno
 
 ```bash
+# Windows (PowerShell)
+[System.Environment]::SetEnvironmentVariable("DB_USERNAME", "root", "User")
+[System.Environment]::SetEnvironmentVariable("DB_PASSWORD", "admin", "User")
+[System.Environment]::SetEnvironmentVariable("JWT_SECRET", "tu_clave_512bits_aqui", "User")
+[System.Environment]::SetEnvironmentVariable("MAIL_USERNAME", "usuario@mailtrap.io", "User")
+[System.Environment]::SetEnvironmentVariable("MAIL_PASSWORD", "tu_contraseña", "User")
+```
+
+### 3. Ejecutar Localmente
+
+```bash
+# Tests
+./mvnw clean test
+
+# Aplicación
 ./mvnw spring-boot:run
 ```
 
-La API quedará disponible en:
+Acceso en: `http://localhost:8080/api`
 
-```
-http://localhost:8080/api
-```
-
-### 5. Documentación interactiva (Swagger)
-
-- UI: `http://localhost:8080/api/swagger-ui.html`
-- JSON OpenAPI: `http://localhost:8080/api/v3/api-docs`
-
-## Ejecutar tests
+### 4. Ejecutar con Docker
 
 ```bash
+docker-compose up -d
+```
+
+---
+
+## 🔐 Variables de Entorno
+
+| Variable | Descripción | Requisito |
+|----------|-------------|-----------|
+| `DB_USERNAME` | Usuario MySQL | root |
+| `DB_PASSWORD` | Contraseña MySQL | admin |
+| `JWT_SECRET` | Clave JWT (≥512 bits) | Cryptográficamente seguro |
+| `MAIL_USERNAME` | Usuario SMTP | Mailtrap/Gmail/Outlook |
+| `MAIL_PASSWORD` | Contraseña SMTP | Token de aplicación |
+| `app.upload.dir` | Directorio de archivos | uploads/claims (default) |
+
+**⚠️ Nunca commitear credenciales reales.**
+
+---
+
+## 📡 API Endpoints Principales
+
+### Autenticación
+- `POST /auth/register` - Registrar usuario
+- `POST /auth/login` - Login y obtener token
+
+### Gestión de Datos
+- `GET/POST/PUT /policies` - Pólizas
+- `GET/POST/PUT /claims` - Reclamos
+- `POST/GET /claims/{id}/documents` - Documentos
+
+### Monitoreo
+- `GET /actuator/health` - Estado de la app (público)
+- `GET /actuator/info` - Información (público)
+- `GET /actuator/metrics` - Métricas (autenticado)
+
+### Documentación
+- `GET /swagger-ui.html` - UI interactiva
+- `GET /v3/api-docs` - Especificación OpenAPI
+
+---
+
+## 🔒 Seguridad
+
+- ✅ JWT con HS512 (512+ bits)
+- ✅ Contraseñas BCrypt
+- ✅ RBAC (Role-Based Access Control)
+- ✅ CORS restringido
+- ✅ Validación de entrada
+- ✅ Variables de entorno para secretos
+
+---
+
+## ✅ Testing
+
+```bash
+# Ejecutar todos los tests (48+)
 ./mvnw test
+
+# Tests específicos
+./mvnw test -Dtest=UserServiceTest
 ```
 
-Los tests de integración usan una base de datos H2 en memoria (`src/test/resources/application-test.properties`), por lo que no requieren MySQL corriendo.
+---
 
-## Generar el .jar ejecutable
+## 🚢 Despliegue
 
+### Local
 ```bash
-./mvnw clean package
+docker-compose up -d
 ```
 
-El artefacto se genera en `target/*.jar` y puede ejecutarse con:
+### Pipeline CI/CD
+El proyecto incluye GitHub Actions que:
+1. Ejecuta tests en cada push
+2. Construye imagen Docker
+3. Genera reportes
 
-```bash
-java -jar target/insurance-platform-springboot-0.0.1-SNAPSHOT.jar
-```
+Ver: [Actions](https://github.com/samirmartinez1984/API-Plataforma-de-seguros-/actions)
 
-## Migraciones de base de datos
+---
 
-El proyecto usa Flyway. Los scripts viven en `src/main/resources/db/migration/` y se ejecutan automáticamente al arrancar la aplicación:
+## 📋 Roadmap
 
-- `V1__Init.sql`: creación de tablas principales (`roles`, `users`, `catalog_products`, `policies`, `partners`, `claims`).
-- `V2__InsertRoles.sql`: inserción de roles base (ADMIN, USER, SUPERVISOR).
-- `V3__AddPolicyNewFields.sql`: campos adicionales en pólizas.
+**Fase 1** ✅ - Base técnica, auth, actuator, notificaciones, documentos
+**Fase 2** 🔄 - Dashboard, reportes, caché
+**Fase 3** 📋 - Pagos, microservicios, WebSockets
 
-## Roadmap (Fase 2)
+---
 
-- [ ] Contenerización con Docker + docker-compose
-- [ ] Pipeline CI/CD (GitHub Actions)
-- [ ] Spring Boot Actuator (monitoreo)
-- [ ] Sistema de notificaciones (email, async)
-- [ ] Gestión de documentos adjuntos en reclamos
-- [ ] Caché (Spring Cache + Caffeine/Redis)
-- [ ] Auditoría de entidades (Spring Data Envers)
-- [ ] Dashboard y reportes
-- [ ] Integración de pagos
-
-## Licencia
-
-Proyecto educativo / portafolio personal.
+**Última actualización**: Agosto 2026 | **Versión**: 2.0.0
