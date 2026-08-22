@@ -7,6 +7,7 @@ import lombok.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * Entidad que representa un reclamo (claim) asociado a una póliza.
@@ -56,6 +57,10 @@ public class Claim {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ClaimStatus status;
+
+    @OneToMany(mappedBy = "claim", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Document> documents = new ArrayList<>();
+
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
